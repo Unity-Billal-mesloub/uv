@@ -1,20 +1,27 @@
+#[cfg(not(test))]
+use std::sync::OnceLock;
+#[cfg(test)]
+use std::sync::RwLock;
 use std::{
     fmt::{Debug, Display, Formatter},
     ops::BitOr,
     str::FromStr,
-    sync::OnceLock,
 };
 
 use enumflags2::{BitFlags, bitflags};
 use thiserror::Error;
 use uv_warnings::warn_user_once;
 
+#[cfg(not(test))]
 static PREVIEW: OnceLock<Preview> = OnceLock::new();
+#[cfg(test)]
+static PREVIEW: RwLock<Option<Preview>> = RwLock::new(None);
 
 /// Initialize the global preview configuration.
 ///
 /// This should be called once at startup with the resolved preview settings.
 #[expect(clippy::result_unit_err)]
+#[cfg(not(test))]
 pub fn init(preview: Preview) -> Result<(), ()> {
     PREVIEW.set(preview).map_err(|_| ())
 }
@@ -25,14 +32,55 @@ pub fn init(preview: Preview) -> Result<(), ()> {
 ///
 /// Panics if called before [`init`] has been called.
 pub fn get() -> Preview {
-    *PREVIEW
-        .get()
-        .expect("preview configuration has not been initialized")
+    #[cfg(not(test))]
+    {
+        *PREVIEW
+            .get()
+            .expect("preview configuration has not been initialized")
+    }
+    #[cfg(test)]
+    {
+        (*PREVIEW.read().unwrap()).expect("you must use `uv_preview::test::with_features` to set up the global preview configuration before calling functions which utilise it")
+    }
 }
 
 /// Check if a specific preview feature is enabled globally.
 pub fn is_enabled(flag: PreviewFeature) -> bool {
     get().is_enabled(flag)
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::{PREVIEW, Preview};
+    use std::sync::{Mutex, MutexGuard};
+
+    static MUTEX: Mutex<()> = Mutex::new(());
+
+    /// A scope guard which ensures that the global preview state is configured
+    /// and consistent for the duration of its lifetime.
+    #[derive(Debug)]
+    #[expect(unused)]
+    pub struct FeaturesGuard(MutexGuard<'static, ()>);
+
+    /// Temporarily set the state of preview features for the duration of the
+    /// lifetime of the returned guard.
+    ///
+    /// Calls cannot be nested, and this function must be used to set the global
+    /// preview features when testing functionality which uses it, otherwise
+    /// that functionality will panic.
+    pub fn with_features<'a>(features: &[super::PreviewFeature]) -> FeaturesGuard {
+        let guard = MUTEX
+            .try_lock()
+            .expect("Could not acquire preview test mutex");
+        *PREVIEW.write().unwrap() = Some(Preview::new(features));
+        FeaturesGuard(guard)
+    }
+
+    impl Drop for FeaturesGuard {
+        fn drop(&mut self) {
+            *super::PREVIEW.write().unwrap() = None
+        }
+    }
 }
 
 #[bitflags]
@@ -363,5 +411,34 @@ mod tests {
             PreviewFeature::SpecialCondaEnvNames.as_str(),
             "special-conda-env-names"
         );
+    }
+
+    #[test]
+    fn test_global_preview() {
+        {
+            let _guard =
+                test::with_features(&[PreviewFeature::Pylock, PreviewFeature::WorkspaceMetadata]);
+            assert!(!is_enabled(PreviewFeature::InitProjectFlag));
+            assert!(is_enabled(PreviewFeature::Pylock));
+            assert!(is_enabled(PreviewFeature::WorkspaceMetadata));
+            assert!(!is_enabled(PreviewFeature::AuthHelper));
+        }
+        {
+            let _guard =
+                test::with_features(&[PreviewFeature::InitProjectFlag, PreviewFeature::AuthHelper]);
+            assert!(is_enabled(PreviewFeature::InitProjectFlag));
+            assert!(!is_enabled(PreviewFeature::Pylock));
+            assert!(!is_enabled(PreviewFeature::WorkspaceMetadata));
+            assert!(is_enabled(PreviewFeature::AuthHelper));
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_global_preview_panic_nested() {
+        let _guard =
+            test::with_features(&[PreviewFeature::Pylock, PreviewFeature::WorkspaceMetadata]);
+        let _guard2 =
+            test::with_features(&[PreviewFeature::InitProjectFlag, PreviewFeature::AuthHelper]);
     }
 }
