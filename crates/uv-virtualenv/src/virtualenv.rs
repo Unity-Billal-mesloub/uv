@@ -12,11 +12,13 @@ use owo_colors::OwoColorize;
 use tracing::{debug, trace};
 
 use crate::{Error, Prompt};
+
 use uv_fs::{CWD, Simplified, cachedir};
 use uv_platform_tags::Os;
 use uv_pypi_types::Scheme;
 use uv_python::managed::{
     ManagedPythonInstallation, PythonMinorVersionLink, create_link_to_executable,
+    link_python_installation, patch_python_installation,
 };
 use uv_python::{Interpreter, VirtualEnvironment};
 use uv_shell::escape_posix_for_single_quotes;
@@ -188,6 +190,19 @@ pub(crate) fn create(
 
     // Use the absolute path for all further operations.
     let location = absolute;
+
+    // If relocatable and using a standalone (managed) Python, create a "real environment"
+    // by hardlinking the entire Python installation into the environment directory.
+    if relocatable && interpreter.is_standalone() {
+        return create_real_environment(
+            &location,
+            interpreter,
+            &base_python,
+            prompt,
+            system_site_packages,
+            seed,
+        );
+    }
 
     let bin_name = if cfg!(unix) {
         "bin"
@@ -584,6 +599,189 @@ pub(crate) fn create(
         root: location,
         executable,
         base_executable: base_python,
+    })
+}
+
+/// Create a "real environment" by hardlinking the entire Python installation into the
+/// environment directory.
+///
+/// Unlike a virtual environment (which symlinks the Python executable back to a shared
+/// installation), a real environment contains its own copy of the Python installation
+/// (via hardlinks for efficiency). This makes the environment fully self-contained and
+/// relocatable.
+fn create_real_environment(
+    location: &Path,
+    interpreter: &Interpreter,
+    base_python: &Path,
+    prompt: Option<String>,
+    system_site_packages: bool,
+    seed: bool,
+) -> Result<VirtualEnvironment, Error> {
+    let bin_name = if cfg!(unix) {
+        "bin"
+    } else if cfg!(windows) {
+        "Scripts"
+    } else {
+        unimplemented!("Only Windows and Unix are supported")
+    };
+
+    // The Python installation root (e.g., `~/.local/share/uv/python/cpython-3.12.0-.../install`).
+    // Resolve symlinks since managed installations may use minor-version symlink aliases
+    // (e.g., `cpython-3.14-linux-x86_64-gnu` -> `cpython-3.14.0-linux-x86_64-gnu`).
+    let python_root = fs_err::canonicalize(interpreter.sys_base_prefix())?;
+
+    debug!(
+        "Creating real environment by hardlinking Python installation from `{}`",
+        python_root.display()
+    );
+
+    // Hardlink the entire Python installation into the environment directory.
+    // Files that are mutated after installation (sysconfig data, pkg-config files,
+    // dylibs on macOS) are copied instead to avoid corrupting the source.
+    link_python_installation(&python_root, location)?;
+
+    // Patch sysconfig data and dylib install names to reference the new location.
+    patch_python_installation(location, &python_root, interpreter)?;
+
+    // Add the CACHEDIR.TAG.
+    cachedir::ensure_tag(location)?;
+
+    // Create a `.gitignore` file to ignore all files in the environment.
+    fs_err::write(location.join(".gitignore"), "*")?;
+
+    let scripts = location.join(&interpreter.virtualenv().scripts);
+    fs_err::create_dir_all(&scripts)?;
+
+    // Ensure `python` points to the versioned executable within the environment.
+    let executable = scripts.join(format!("python{EXE_SUFFIX}"));
+    #[cfg(unix)]
+    {
+        // The versioned executable (e.g., `python3.12`) already exists from the hardlink.
+        // Create a `python` symlink pointing to it.
+        let python_versioned = format!(
+            "python{}.{}",
+            interpreter.python_major(),
+            interpreter.python_minor()
+        );
+        uv_fs::replace_symlink(&python_versioned, &executable)?;
+        uv_fs::replace_symlink(
+            "python",
+            scripts.join(format!("python{}", interpreter.python_major())),
+        )?;
+    }
+
+    // Add all the activation scripts for different shells.
+    for (name, template) in ACTIVATE_TEMPLATES {
+        // csh has no way to determine its own script location, so a relocatable
+        // activate.csh is not possible.
+        if *name == "activate.csh" {
+            continue;
+        }
+
+        let path_sep = if cfg!(windows) { ";" } else { ":" };
+
+        let relative_site_packages = [
+            interpreter.virtualenv().purelib.as_path(),
+            interpreter.virtualenv().platlib.as_path(),
+        ]
+        .iter()
+        .dedup()
+        .map(|path| {
+            pathdiff::diff_paths(path, &interpreter.virtualenv().scripts)
+                .expect("Failed to calculate relative path to site-packages")
+        })
+        .map(|path| path.simplified().to_str().unwrap().replace('\\', "\\\\"))
+        .join(path_sep);
+
+        // Use relocatable paths for all activation scripts.
+        let virtual_env_dir = match name.to_owned() {
+            "activate" => {
+                r#"'"$(dirname -- "$(dirname -- "$(realpath -- "$SCRIPT_PATH")")")"'"#.to_string()
+            }
+            "activate.bat" => r"%~dp0..".to_string(),
+            "activate.fish" => {
+                r#"'"$(dirname -- "$(cd "$(dirname -- "$(status -f)")"; and pwd)")"'"#.to_string()
+            }
+            "activate.nu" => r"(path self | path dirname | path dirname)".to_string(),
+            // Note: `activate.ps1` is already relocatable by default.
+            _ => escape_posix_for_single_quotes(location.simplified().to_str().unwrap()),
+        };
+
+        let activator = template
+            .replace("{{ VIRTUAL_ENV_DIR }}", &virtual_env_dir)
+            .replace("{{ BIN_NAME }}", bin_name)
+            .replace(
+                "{{ VIRTUAL_PROMPT }}",
+                prompt.as_deref().unwrap_or_default(),
+            )
+            .replace("{{ PATH_SEP }}", path_sep)
+            .replace("{{ RELATIVE_SITE_PACKAGES }}", &relative_site_packages);
+        fs_err::write(scripts.join(name), activator)?;
+    }
+
+    // Write `pyvenv.cfg` so uv can identify and manage this environment.
+    // The `home` points to the environment's own scripts directory, making it self-contained.
+    let python_home = scripts.as_path();
+
+    let mut pyvenv_cfg_data: Vec<(String, String)> = vec![
+        (
+            "home".to_string(),
+            python_home.simplified_display().to_string(),
+        ),
+        (
+            "implementation".to_string(),
+            interpreter
+                .markers()
+                .platform_python_implementation()
+                .to_string(),
+        ),
+        ("uv".to_string(), version().to_string()),
+        (
+            "version_info".to_string(),
+            interpreter.markers().python_full_version().string.clone(),
+        ),
+        (
+            "include-system-site-packages".to_string(),
+            if system_site_packages {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            },
+        ),
+        ("relocatable".to_string(), "true".to_string()),
+    ];
+
+    if seed {
+        pyvenv_cfg_data.push(("seed".to_string(), "true".to_string()));
+    }
+
+    if let Some(prompt) = prompt {
+        pyvenv_cfg_data.push(("prompt".to_string(), prompt));
+    }
+
+    let mut pyvenv_cfg = BufWriter::new(File::create(location.join("pyvenv.cfg"))?);
+    write_cfg(&mut pyvenv_cfg, &pyvenv_cfg_data)?;
+    drop(pyvenv_cfg);
+
+    // Ensure the `site-packages` directory exists.
+    let site_packages = location.join(&interpreter.virtualenv().purelib);
+    fs_err::create_dir_all(&site_packages)?;
+
+    // Populate `site-packages` with `_virtualenv.py` for virtual environment support.
+    fs_err::write(site_packages.join("_virtualenv.py"), VIRTUALENV_PATCH)?;
+    fs_err::write(site_packages.join("_virtualenv.pth"), "import _virtualenv")?;
+
+    Ok(VirtualEnvironment {
+        scheme: Scheme {
+            purelib: location.join(&interpreter.virtualenv().purelib),
+            platlib: location.join(&interpreter.virtualenv().platlib),
+            scripts: location.join(&interpreter.virtualenv().scripts),
+            data: location.join(&interpreter.virtualenv().data),
+            include: location.join(&interpreter.virtualenv().include),
+        },
+        root: location.to_path_buf(),
+        executable,
+        base_executable: base_python.to_path_buf(),
     })
 }
 
