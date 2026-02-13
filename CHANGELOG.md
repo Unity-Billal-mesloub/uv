@@ -3,6 +3,37 @@
 <!-- prettier-ignore-start -->
 
 
+## 0.10.3
+
+Released on 2026-02-13.
+
+### Enhancements
+
+- Don't open lock files for writing ([#17956](https://github.com/astral-sh/uv/pull/17956))
+- Make trampoline error messages consistent with uv proper ([#17969](https://github.com/astral-sh/uv/pull/17969))
+- Log which preview features are enabled ([#17968](https://github.com/astral-sh/uv/pull/17968))
+
+### Preview features
+
+- Add support for ruff version constraints and `exclude-newer` in `uv format` ([#17651](https://github.com/astral-sh/uv/pull/17651))
+- Fix script path handling when `target-workspace-discovery` is enabled ([#17965](https://github.com/astral-sh/uv/pull/17965))
+
+### Bug fixes
+
+- Do not match cpython 3.10 for cpython-3.1 ([#17972](https://github.com/astral-sh/uv/pull/17972))
+- Fix handling of `--allow-existing` with minor version links on Windows ([#17978](https://github.com/astral-sh/uv/pull/17978))
+- Fix panic when encountering unmanaged workspace members ([#17974](https://github.com/astral-sh/uv/pull/17974))
+- Improve accuracy of request timing ([#18007](https://github.com/astral-sh/uv/pull/18007))
+- Reject `u64::MAX` in version segments to prevent overflow ([#17985](https://github.com/astral-sh/uv/pull/17985))
+
+### Documentation
+
+- Reference Debian Trixie instead of Bookworm ([#17991](https://github.com/astral-sh/uv/pull/17991))
+
+### Python
+
+- Add CPython 3.15.0a6
+
 ## 0.10.2
 
 Released on 2026-02-10.
