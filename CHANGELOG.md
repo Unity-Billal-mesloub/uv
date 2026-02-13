@@ -5,12 +5,16 @@
 
 ## 0.10.3
 
+### Python
+
+- Add CPython 3.15.0a6
+
 Released on 2026-02-13.
 
 ### Enhancements
 
-- Don't open lock files for writing ([#17956](https://github.com/astral-sh/uv/pull/17956))
-- Make trampoline error messages consistent with uv proper ([#17969](https://github.com/astral-sh/uv/pull/17969))
+- Don't open file locks for writing ([#17956](https://github.com/astral-sh/uv/pull/17956))
+- Make Windows trampoline error messages consistent with uv proper ([#17969](https://github.com/astral-sh/uv/pull/17969))
 - Log which preview features are enabled ([#17968](https://github.com/astral-sh/uv/pull/17968))
 
 ### Preview features
@@ -20,7 +24,7 @@ Released on 2026-02-13.
 
 ### Bug fixes
 
-- Do not match cpython 3.10 for cpython-3.1 ([#17972](https://github.com/astral-sh/uv/pull/17972))
+- Avoid matching managed Python versions by prefixes, e.g. don't match CPython 3.10 when `cpython-3.1` is specified ([#17972](https://github.com/astral-sh/uv/pull/17972))
 - Fix handling of `--allow-existing` with minor version links on Windows ([#17978](https://github.com/astral-sh/uv/pull/17978))
 - Fix panic when encountering unmanaged workspace members ([#17974](https://github.com/astral-sh/uv/pull/17974))
 - Improve accuracy of request timing ([#18007](https://github.com/astral-sh/uv/pull/18007))
@@ -29,10 +33,6 @@ Released on 2026-02-13.
 ### Documentation
 
 - Reference Debian Trixie instead of Bookworm ([#17991](https://github.com/astral-sh/uv/pull/17991))
-
-### Python
-
-- Add CPython 3.15.0a6
 
 ## 0.10.2
 
