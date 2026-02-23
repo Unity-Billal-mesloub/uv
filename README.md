@@ -1,10 +1,10 @@
 # uv
 
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/Unity-Billal-mesloub/uv)
 [![image](https://img.shields.io/pypi/v/uv.svg)](https://pypi.python.org/pypi/uv)
 [![image](https://img.shields.io/pypi/l/uv.svg)](https://pypi.python.org/pypi/uv)
 [![image](https://img.shields.io/pypi/pyversions/uv.svg)](https://pypi.python.org/pypi/uv)
-[![Actions status](https://github.com/astral-sh/uv/actions/workflows/ci.yml/badge.svg)](https://github.com/astral-sh/uv/actions)
+[![Actions status](https://github.com/Unity-Billal-mesloub/uv/actions/workflows/ci.yml/badge.svg)](https://github.com/Unity-Billal-mesloub/uv/actions)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.gg/astral-sh)
 
 An extremely fast Python package and project manager, written in Rust.
@@ -25,7 +25,7 @@ An extremely fast Python package and project manager, written in Rust.
 
 - A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`, and
   more.
-- [10-100x faster](https://github.com/astral-sh/uv/blob/main/BENCHMARKS.md) than `pip`.
+- [10-100x faster](https://github.com/Unity-Billal-mesloub/uv/blob/main/BENCHMARKS.md) than `pip`.
 - Provides [comprehensive project management](#projects), with a
   [universal lockfile](https://docs.astral.sh/uv/concepts/projects/layout#the-lockfile).
 - [Runs scripts](#scripts), with support for
@@ -42,7 +42,7 @@ An extremely fast Python package and project manager, written in Rust.
 - Supports macOS, Linux, and Windows.
 
 uv is backed by [Astral](https://astral.sh), the creators of
-[Ruff](https://github.com/astral-sh/ruff) and [ty](https://github.com/astral-sh/ty).
+[Ruff](https://github.com/Unity-Billal-mesloub/ruff) and [ty](https://github.com/Unity-Billal-mesloub/ty).
 
 ## Installation
 
@@ -272,7 +272,7 @@ See the [pip interface documentation](https://docs.astral.sh/uv/pip/index/) to g
 
 We are passionate about supporting contributors of all levels of experience and would love to see
 you get involved in the project. See the
-[contributing guide](https://github.com/astral-sh/uv?tab=contributing-ov-file#contributing) to get
+[contributing guide](https://github.com/Unity-Billal-mesloub/uv?tab=contributing-ov-file#contributing) to get
 started.
 
 ## FAQ
@@ -296,23 +296,23 @@ Yes, uv is stable and widely used in production. See uv's
 
 ## Acknowledgements
 
-uv's dependency resolver uses [PubGrub](https://github.com/pubgrub-rs/pubgrub) under the hood. We're
-grateful to the PubGrub maintainers, especially [Jacob Finkelman](https://github.com/Eh2406), for
+uv's dependency resolver uses [PubGrub](https://github.com/Unity-Billal-mesloub/pubgrub) under the hood. We're
+grateful to the PubGrub maintainers, especially [Billal-mesloub](https://github.com/Unity-Billal-mesloub), for
 their support.
 
-uv's Git implementation is based on [Cargo](https://github.com/rust-lang/cargo).
+uv's Git implementation is based on [Cargo](https://github.com/Unity-Billal-mesloub/cargo).
 
 Some of uv's optimizations are inspired by the great work we've seen in [pnpm](https://pnpm.io/),
-[Orogene](https://github.com/orogene/orogene), and [Bun](https://github.com/oven-sh/bun). We've also
-learned a lot from Nathaniel J. Smith's [Posy](https://github.com/njsmith/posy) and adapted its
-[trampoline](https://github.com/njsmith/posy/tree/main/src/trampolines/windows-trampolines/posy-trampoline)
+[Orogene](https://github.com/Unity-Billal-mesloub/orogene), and [Bun](https://github.com/Unity-Agriculture/bun). We've also
+learned a lot from Nathaniel J. Smith's [Posy](https://github.com/Unity-Billal-mesloub/posy) and adapted its
+[trampoline](https://github.com/Unity-Billal-mesloub/posy/tree/main/src/trampolines/windows-trampolines/posy-trampoline)
 for Windows support.
 
 ## License
 
 uv is licensed under either of
 
-- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+- LICENSE-MIT, LICENSE-MIT, ([LICENSE-MIT](LICENSE-MIT) or
   <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
