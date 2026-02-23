@@ -3,11 +3,11 @@
 ## Finding ways to help
 
 We label issues that would be good for a first time contributor as
-[`good first issue`](https://github.com/astral-sh/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+[`good first issue`](https://github.com/Unity-Billal-mesloub/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 These usually do not require significant experience with Rust or the uv code base.
 
 We label issues that we think are a good opportunity for subsequent contributions as
-[`help wanted`](https://github.com/astral-sh/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
+[`help wanted`](https://github.com/Unity-Billal-mesloub/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
 These require varying levels of experience with Rust and uv. Often, we want to accomplish these
 tasks but do not have the resources to do so ourselves.
 
@@ -20,7 +20,7 @@ for community contribution. We're happy to receive contributions for other issue
 important to make sure we have consensus on the solution to the problem first.
 
 Outside of issues with the labels above, issues labeled as
-[`bug`](https://github.com/astral-sh/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22bug%22) are the
+[`bug`](https://github.com/Unity-Billal-mesloub/uv/issues?q=is%3Aopen+is%3Aissue+label%3A%22bug%22) are the
 best candidates for contribution. In contrast, issues labeled with `needs-decision` or
 `needs-design` are _not_ good candidates for contribution. Please do not open pull requests for
 issues with these labels.
@@ -140,8 +140,8 @@ docker run --rm -v .:/src/ -w /src/ node:alpine npx prettier --write .
 
 ## Linting
 
-Linting requires [shellcheck](https://github.com/koalaman/shellcheck) and
-[cargo-shear](https://github.com/Boshen/cargo-shear) to be installed separately.
+Linting requires [shellcheck](https://github.com/Unity-Billal-mesloub/shellcheck) and
+[cargo-shear](https://github.com/Unity-Billal-mesloub/cargo-shear) to be installed separately.
 
 ```shell
 # Rust
@@ -166,7 +166,7 @@ cargo shear
 ### Compiling for Windows from Unix
 
 To run clippy for a Windows target from Linux or macOS, you can use
-[cargo-xwin](https://github.com/rust-cross/cargo-xwin):
+[cargo-xwin](https://github.com/Unity-Billal-mesloub/cargo-xwin):
 
 ```shell
 # Install cargo-xwin
@@ -182,7 +182,7 @@ cargo xwin clippy --workspace --all-targets --all-features --locked -- -D warnin
 ## Crate structure
 
 Rust does not allow circular dependencies between crates. To visualize the crate hierarchy, install
-[cargo-depgraph](https://github.com/jplatte/cargo-depgraph) and graphviz, then run:
+[cargo-depgraph](https://github.com/Unity-Billal-mesloub/cargo-depgraph) and graphviz, then run:
 
 ```shell
 cargo depgraph --dedup-transitive-deps --workspace-only | dot -Tpng > graph.png
@@ -209,7 +209,7 @@ trying to resolve or install.
 ## Profiling and Benchmarking
 
 Please refer to Ruff's
-[Profiling Guide](https://github.com/astral-sh/ruff/blob/main/CONTRIBUTING.md#profiling-projects),
+[Profiling Guide](https://github.com/Unity-Billal-mesloub/ruff/blob/main/CONTRIBUTING.md#profiling-projects),
 it applies to uv, too.
 
 We provide diverse sets of requirements for testing and benchmarking the resolver in
@@ -229,7 +229,7 @@ uv run resolver \
 
 ### Analyzing concurrency
 
-You can use [tracing-durations-export](https://github.com/konstin/tracing-durations-export) to
+You can use [tracing-durations-export](https://github.com/Unity-Billal-mesloub/tracing-durations-export) to
 visualize parallel requests and find any spots where uv is CPU-bound. Example usage, with `uv` and
 `uv-dev` respectively:
 
@@ -273,7 +273,7 @@ uv pip compile docs/requirements.in -o docs/requirements.txt --universal -p 3.12
 ```
 
 Documentation is deployed automatically on release by publishing to the
-[Astral documentation](https://github.com/astral-sh/docs) repository, which itself deploys via
+[Astral documentation](https://github.com/Unity-Billal-mesloub/docs) repository, which itself deploys via
 Cloudflare Pages.
 
 After making changes to the documentation, [format the markdown files](#formatting) using Prettier.
@@ -337,6 +337,6 @@ Then, open a pull request, e.g., `Bump version to ...`.
 Binary builds will automatically be tested for the release.
 
 After merging the pull request, run the
-[release workflow](https://github.com/astral-sh/uv/actions/workflows/release.yml) with the version
+[release workflow](https://github.com/Unity-Billal-mesloub/uv/actions/workflows/release.yml) with the version
 tag. **Do not include a leading `v`**. The release will automatically be created on GitHub after
 everything else publishes.
