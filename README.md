@@ -313,13 +313,12 @@ for Windows support.
 uv is licensed under either of
 
 - LICENSE-MIT, LICENSE-MIT, ([LICENSE-MIT](LICENSE-MIT) or
-  <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in uv
-by you, as defined in the Apache-2.0 license, shall be dually licensed as above, without any
+by you, as defined in the MIT license, shall be dually licensed as above, without any
 additional terms or conditions.
 
 <div align="center">
